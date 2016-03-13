@@ -203,7 +203,7 @@ class Divvit_Tracking_Public
 	}
 
 	public function getProductCats($product){
-		$term = get_the_terms($product->get_id(), 'product_cat');
+		$term = get_the_terms($product->id, 'product_cat');
 		$cat_array = Array();
 
 		foreach ($term as $single_term) {

@@ -3,17 +3,17 @@
 /**
  * The plugin bootstrap file
  *
- * @link              http://divvit.com
- * @since             1.0.0
+ * @link              https://www.divvit.com
+ * @since             1.0.1
  * @package           Divvit_Tracking
  *
  * @wordpress-plugin
  * Plugin Name:       Divvit Tracking Plugin
- * Plugin URI:        http://divvit.com
- * Description:       Add a Divvit tracking pixel to Woocommerce
- * Version:           1.0.0
- * Author:            out of scope dev. GmbH
- * Author URI:        http://outofscope.io
+ * Plugin URI:        https://www.divvit.com
+ * Description:       Integrate the Divvit tracking pixel into Woocommerce
+ * Version:           1.0.1
+ * Author:            Divvit AB
+ * Author URI:        https://www.divvit.com
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       divvit-tracking
