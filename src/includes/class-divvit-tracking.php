@@ -168,6 +168,8 @@ class Divvit_Tracking {
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 		$this->loader->add_action( 'wp_footer', $plugin_public, 'insert_divvit_tracking_script' );
 		$this->loader->add_action( 'woocommerce_thankyou', $plugin_public, 'insert_divvit_order_tracking_script' );
+		$this->loader->add_action( 'woocommerce_ajax_added_to_cart', $plugin_public, 'divvit_add_cart_item' );
+		$this->loader->add_action( 'woocommerce_add_to_cart', $plugin_public, 'divvit_add_cart_item' );
 	}
 
 	/**

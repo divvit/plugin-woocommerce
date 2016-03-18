@@ -11,7 +11,7 @@
  * Plugin Name:       Divvit Tracking Plugin
  * Plugin URI:        https://www.divvit.com
  * Description:       Integrate the Divvit tracking pixel into Woocommerce
- * Version:           1.0.1
+ * Version:           1.0.2
  * Author:            Divvit AB
  * Author URI:        https://www.divvit.com
  * License:           GPL-2.0+

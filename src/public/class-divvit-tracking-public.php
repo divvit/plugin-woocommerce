@@ -99,7 +99,7 @@ class Divvit_Tracking_Public
 							id: "<?php echo $product->get_id(); ?>",
 							name: "<?php echo $product->get_title(); ?>",
 							category: <?php echo json_encode($product_cats); ?>,
-							price: "<?php echo $product->get_price(); ?>",
+							price: "<?php echo substr_replace((string)$_product->price, '.', -2, 0); ?>",
 							currency: "<?php echo $order->get_order_currency(); ?>",
 							quantity: "<?php echo $single_product['qty']; ?>"
 						},
@@ -134,6 +134,9 @@ class Divvit_Tracking_Public
 	public function insert_divvit_tracking_script() {
 		$frontend_id = get_option('divvit_tracking_id');
 
+		$cookie = WC()->session->get_session_cookie();
+		$cookieHash = $cookie[3];
+
 		if(is_cart()) {
 			?>
 			<script type="text/javascript">
@@ -141,6 +144,7 @@ class Divvit_Tracking_Public
 				divvit.init('<?php echo $frontend_id; ?>');
 				divvit.pageview();
 				divvit.cartUpdated({
+					cartID: '<?php echo $cookieHash; ?>',
 					products: [
 						<?php foreach( WC()->cart->get_cart() as $cart_item_key => $values ) {
 							$_product = $values['data'];
@@ -149,8 +153,9 @@ class Divvit_Tracking_Public
 						{
 							id: '<?php echo $_product->id; ?>',
 							name: '<?php echo $_product->post->post_name; ?>',
-							category: '<?php echo json_encode($product_cats); ?>',
-							price: '<?php echo $_product->price; ?>'
+							category: <?php echo str_replace(array('\"', '\u', '"[', ']"'), array('"', 'u', '[', ']'), json_encode($product_cats)); ?>,
+							price: '<?php echo substr_replace((string)$_product->price, '.', -2, 0); ?>',
+							quantity: '<?php echo $values["quantity"]; ?>'
 						},
 						<?php } ?>
 					],
@@ -174,6 +179,32 @@ class Divvit_Tracking_Public
 			</script>
 			<?php
 		}
+	}
+
+	public function divvit_add_cart_item() {
+		$dvTrack = $_COOKIE['DV_TRACK'];
+		$frontend_id = get_option('divvit_tracking_id');
+		$products = '';
+		foreach( WC()->cart->get_cart() as $cart_item_key => $values ) {
+			$_product = $values['data'];
+			$product_cats = $this->getProductCats($_product);
+			$price = (string)$_product->price;
+			$price = substr_replace($price, '.', -2, 0);
+			$quantity = $values['quantity'];
+			$products .= '{"id":"'.$_product->id.'","name":"'.$_product->post->post_name.'","category":'.str_replace(array('\"', '\u', '"[', ']"'), array('"', 'u', '[', ']'), json_encode($product_cats)).',"price":"'.$price.'","quantity":"'.$quantity.'"},';
+		}
+		$cookie = WC()->session->get_session_cookie();
+		$cookieHash = $cookie[3];
+		$result = file_get_contents(
+			'https://tracker.divvit.com/track.js'.
+			'?i='.$frontend_id.
+			'&e=cart'.
+			'&v=1.0.0'.
+			'&uid='.$dvTrack.
+			'&m='.urlencode('{"cartID":"' . $cookieHash . '","products":['.rtrim($products, ',').']}')
+		);
+
+
 	}
 
 	public function getDivvitInitScript(){
