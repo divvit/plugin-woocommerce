@@ -183,27 +183,28 @@ class Divvit_Tracking_Public
 
 	public function divvit_add_cart_item() {
 		$dvTrack = $_COOKIE['DV_TRACK'];
-		$frontend_id = get_option('divvit_tracking_id');
-		$products = '';
-		foreach( WC()->cart->get_cart() as $cart_item_key => $values ) {
-			$_product = $values['data'];
-			$product_cats = $this->getProductCats($_product);
-			$price = (string)$_product->price;
-			$price = substr_replace($price, '.', -2, 0);
-			$quantity = $values['quantity'];
-			$products .= '{"id":"'.$_product->id.'","name":"'.$_product->post->post_name.'","category":'.str_replace(array('\"', '\u', '"[', ']"'), array('"', 'u', '[', ']'), json_encode($product_cats)).',"price":"'.$price.'","quantity":"'.$quantity.'"},';
+		if ($dvTrack) {
+			$frontend_id = get_option('divvit_tracking_id');
+			$products = '';
+			foreach( WC()->cart->get_cart() as $cart_item_key => $values ) {
+				$_product = $values['data'];
+				$product_cats = $this->getProductCats($_product);
+				$price = (string)$_product->price;
+				$price = substr_replace($price, '.', -2, 0);
+				$quantity = $values['quantity'];
+				$products .= '{"id":"'.$_product->id.'","name":"'.$_product->post->post_name.'","category":'.str_replace(array('\"', '\u', '"[', ']"'), array('"', 'u', '[', ']'), json_encode($product_cats)).',"price":"'.$price.'","quantity":"'.$quantity.'"},';
+			}
+			$cookie = WC()->session->get_session_cookie();
+			$cookieHash = $cookie[3];
+			$result = file_get_contents(
+				'https://tracker.divvit.com/track.js'.
+				'?i='.$frontend_id.
+				'&e=cart'.
+				'&v=1.0.0'.
+				'&uid='.$dvTrack.
+				'&m='.urlencode('{"cartID":"' . $cookieHash . '","products":['.rtrim($products, ',').']}')
+			);
 		}
-		$cookie = WC()->session->get_session_cookie();
-		$cookieHash = $cookie[3];
-		$result = file_get_contents(
-			'https://tracker.divvit.com/track.js'.
-			'?i='.$frontend_id.
-			'&e=cart'.
-			'&v=1.0.0'.
-			'&uid='.$dvTrack.
-			'&m='.urlencode('{"cartID":"' . $cookieHash . '","products":['.rtrim($products, ',').']}')
-		);
-
 
 	}
 
