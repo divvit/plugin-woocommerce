@@ -197,7 +197,7 @@ class Divvit_Tracking_Public
 			$cookie = WC()->session->get_session_cookie();
 			$cookieHash = $cookie[3];
 			$result = file_get_contents(
-				'https://tracker.divvit.com/track.js'.
+			'https://tracker.divvit.com/track.js'.
 				'?i='.$frontend_id.
 				'&e=cart'.
 				'&v=1.0.0'.
@@ -210,27 +210,7 @@ class Divvit_Tracking_Public
 
 	public function getDivvitInitScript(){
 		?>
-		!function () {
-			var t = window.divvit = window.divvit || [];
-			if (t.DV_VERSION = "1.0.0", t.init = function (e) {
-			if (!t.bInitialized) {
-			var i = document.createElement("script");
-			i.setAttribute("type", "text/javascript"), i.setAttribute("async", !0), i.setAttribute("src", "https://tag.divvit.com/tag.js?id=" + e);
-			var n = document.getElementsByTagName("script")[0];
-			n.parentNode.insertBefore(i, n)
-			}
-			}, !t.bInitialized) {
-			t.functions = ["customer", "pageview", "cartAdd", "cartRemove", "cartUpdated", "orderPlaced", "nlSubscribed", "dv"];
-			for (var e = 0; e < t.functions.length; e++) {
-			var i = t.functions[e];
-			t[i] = function (e) {
-			return function () {
-			return Array.prototype.unshift.call(arguments, e), t.push(arguments), t
-			}
-			}(i)
-			}
-			}
-		}();
+		!function(){var t=window.divvit=window.divvit||[];if(t.DV_VERSION="1.0.0",t.init=function(e){if(!t.bInitialized){var i=document.createElement("script");i.setAttribute("type","text/javascript"),i.setAttribute("async",!0),i.setAttribute("src","https://tag.divvit.com/tag.js?id="+e);var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(i,n)}},!t.bInitialized){t.functions=["customer","pageview","cartAdd","cartRemove","cartUpdated","orderPlaced","nlSubscribed","dv"];for(var e=0;e<t.functions.length;e++){var i=t.functions[e];t[i]=function(e){return function(){return Array.prototype.unshift.call(arguments,e),t.push(arguments),t}}(i)}}}();
 		<?php
 	}
 
@@ -238,9 +218,12 @@ class Divvit_Tracking_Public
 		$term = get_the_terms($product->id, 'product_cat');
 		$cat_array = Array();
 
-		foreach ($term as $single_term) {
-			array_push($cat_array, $single_term->name);
+		if ($term) {
+			foreach ($term as $single_term) {
+				array_push($cat_array, $single_term->name);
+			}
 		}
+
 		return json_encode($cat_array);
 	}
 }

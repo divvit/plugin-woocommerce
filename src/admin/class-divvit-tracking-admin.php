@@ -74,13 +74,18 @@ class Divvit_Tracking_Admin {
 
 	public function add_divvit_tracking_settings( $settings ) {
 		$settings_divvit = array();
-		$settings_divvit[] = array( 'name' => __( 'Divvit Tracking Settings', 'text-domain' ), 'type' => 'title', 'desc' => __( 'The following options are used to configure Divvit Tracking', 'divvit-tracking' ), 'id' => 'divvittracking' );
+		$settings_divvit[] = array(
+			'name' => __( 'Divvit Tracking Settings', 'text-domain' ),
+			'type' => 'title',
+			'desc' => __( 'The following options are used to configure Divvit Tracking', 'divvit-tracking' ),
+			'id' => 'divvittracking'
+		);
 		$settings_divvit[] = array(
 			'name'     => __( 'Divvit Frontend ID', 'divvit-tracking' ),
 			'desc_tip' => __( 'This will add the frontend ID to your tracking pixel', 'divvit-tracking' ),
 			'id'       => 'divvit_tracking_id',
 			'type'     => 'text',
-			'desc'     => __( 'Insert Frontend ID here', 'divvit-tracking' ),
+			'desc'     => __( 'Insert your Frontend ID here (DV-123).', 'divvit-tracking' ),
 		);
 		$settings_divvit[] = array( 'type' => 'sectionend', 'id' => 'divvittracking' );
 		return array_merge($settings,$settings_divvit);
