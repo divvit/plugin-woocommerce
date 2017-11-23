@@ -83,7 +83,6 @@ class Divvit_Tracking_Public
 		$products = $order->get_items();
 		$coupons = $order->get_used_coupons();
 		?>
-
 		<script type="text/javascript">
 			<?php $this->getDivvitInitScript(); ?>
 			divvit.init('<?php echo $frontend_id; ?>');
@@ -97,8 +96,8 @@ class Divvit_Tracking_Public
 					{
 						id: "<?php echo $product->get_id(); ?>",
 						name: "<?php echo $product->get_title(); ?>",
-						category: <?php echo json_encode($product_cats); ?>,
-						price: "<?php echo substr_replace((string)$_product->price, '.', -2, 0); ?>",
+						category: <?php echo $product_cats; ?>,
+						price: "<?php echo $product->price ?>",
 						currency: "<?php echo $order->get_order_currency(); ?>",
 						quantity: "<?php echo $single_product['qty']; ?>"
 					},
