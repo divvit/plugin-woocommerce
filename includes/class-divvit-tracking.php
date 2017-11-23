@@ -86,7 +86,7 @@ class Divvit_Tracking {
 	 * - Divvit_Tracking_Loader. Orchestrates the hooks of the plugin.
 	 * - Divvit_Tracking_i18n. Defines internationalization functionality.
 	 * - Divvit_Tracking_Admin. Defines all hooks for the admin area.
-	 * - Divvit_Tracking_Public. Defines all hooks for the public side of the site.
+	 * - `. Defines all hooks for the public side of the site.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -163,7 +163,6 @@ class Divvit_Tracking {
 	private function define_public_hooks() {
 
 		$plugin_public = new Divvit_Tracking_Public( $this->get_Divvit_Tracking(), $this->get_version() );
-
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 		$this->loader->add_action( 'wp_footer', $plugin_public, 'insert_divvit_tracking_script' );
