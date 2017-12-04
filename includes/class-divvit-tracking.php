@@ -225,13 +225,13 @@ class Divvit_Tracking {
 	        if (getenv('DIVVIT_TAG_URL') != '') {
 	            return getenv('DIVVIT_TAG_URL');
 	        } else {
-	            return 'http://tag.divvit.com';
+	            return 'https://tag.divvit.com';
 	        }
 	    } else {
 	        if (getenv('DIVVIT_TRACKING_URL') != '') {
 	            return getenv('DIVVIT_TRACKING_URL');
 	        } else {
-	            return 'http://tracker.divvit.com';
+	            return 'https://tracker.divvit.com';
 	        }
 	    }
 	}
