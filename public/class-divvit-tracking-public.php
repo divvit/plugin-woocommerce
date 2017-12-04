@@ -77,17 +77,33 @@ class Divvit_Tracking_Public
 	}
 
 	public function insert_divvit_order_tracking_script($order_id) {
-
 		$frontend_id = get_option('divvit_tracking_id');
 		$order = new WC_Order($order_id);
 		$products = $order->get_items();
 		$coupons = $order->get_used_coupons();
+		$uid = '';
+		if(isset($_COOKIE['DV_TRACK']))
+			$uid = $_COOKIE['DV_TRACK']
 		?>
 		<script type="text/javascript">
 			<?php $this->getDivvitInitScript(); ?>
 			divvit.init('<?php echo $frontend_id; ?>');
 			divvit.pageview();
 			divvit.orderPlaced({
+				uid: "<?php echo $uid; ?>",
+				orderId: "<?php echo $order->id; ?>",
+				createdAt: "<?php echo gmdate('Y-m-d H:i:s', strtotime($order->order_date)) ?>",
+				total: "<?php echo $order->get_total(); ?>",
+				totalProductsNet: "<?php echo $order->get_subtotal(); ?>",
+				currency: "<?php echo $order->get_order_currency(); ?>",
+				shipping: "<?php echo $order->get_total_shipping(); ?>",
+				paymentMethod: "<?php echo $order->payment_method; ?>",
+				customer: {
+					idFields: {
+						email: "<?php echo $order->billing_email; ?>"
+					},
+					name: "<?php echo $order->billing_first_name . ' ' . $order->billing_last_name  ?>"
+				},
 				products: [
 					<?php foreach($products as $single_product):
 					$product = new WC_Product($single_product['product_id']);
@@ -110,19 +126,7 @@ class Divvit_Tracking_Public
 						voucherDiscount: "<?php echo $order->cart_discount; ?>"
 					},
 					<?php endforeach; ?>
-				],
-				orderId: "<?php echo $order->id; ?>",
-				total: "<?php echo $order->get_total(); ?>",
-				totalProductsNet: "<?php echo $order->get_subtotal(); ?>",
-				currency: "<?php echo $order->get_order_currency(); ?>",
-				shipping: "<?php echo $order->get_total_shipping(); ?>",
-				paymentMethod: "<?php echo $order->payment_method; ?>",
-				customer: {
-					idFields: {
-						email: "<?php echo $order->billing_email; ?>"
-					},
-					name: "<?php echo $order->billing_first_name . ' ' . $order->billing_last_name  ?>"
-				}
+				]
 			});
 		</script>
 		<?php
@@ -179,6 +183,7 @@ class Divvit_Tracking_Public
 	}
 
 	public function divvit_add_cart_item() {
+		$divvitTracking = new Divvit_Tracking;
 		$dvTrack = $_COOKIE['DV_TRACK'];
 		if ($dvTrack) {
 			$frontend_id = get_option('divvit_tracking_id');
@@ -194,7 +199,7 @@ class Divvit_Tracking_Public
 			$cookie = WC()->session->get_session_cookie();
 			$cookieHash = $cookie[3];
 			$result = file_get_contents(
-			$this->get_divvit_url('tracker').'/track.js'.
+			$divvitTracking->get_divvit_url('tracker').'/track.js'.
 				'?i='.$frontend_id.
 				'&e=cart'.
 				'&v=1.0.0'.
@@ -205,31 +210,9 @@ class Divvit_Tracking_Public
 
 	}
 
-	/**
-	 * Get corresponding divvit tag/tracker url
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	public static function get_divvit_url($type = '')
-	{
-	    if ($type == 'tag') {
-	        if (getenv('DIVVIT_TAG_URL') != '') {
-	            return getenv('DIVVIT_TAG_URL');
-	        } else {
-	            return 'https://tag.divvit.com';
-	        }
-	    } else {
-	        if (getenv('DIVVIT_TRACKING_URL') != '') {
-	            return getenv('DIVVIT_TRACKING_URL');
-	        } else {
-	            return 'https://tracker.divvit.com';
-	        }
-	    }
-	}
-
 	public function getDivvitInitScript(){
-		echo '!function(){var t=window.divvit=window.divvit||[];if(t.DV_VERSION="1.0.0",t.init=function(e){if(!t.bInitialized){var i=document.createElement("script");i.setAttribute("type","text/javascript"),i.setAttribute("async",!0),i.setAttribute("src","'.$this->get_divvit_url('tag').'/tag.js?id="+e);var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(i,n)}},!t.bInitialized){t.functions=["customer","pageview","cartAdd","cartRemove","cartUpdated","orderPlaced","nlSubscribed","dv"];for(var e=0;e<t.functions.length;e++){var i=t.functions[e];t[i]=function(e){return function(){return Array.prototype.unshift.call(arguments,e),t.push(arguments),t}}(i)}}}();';
+		$divvitTracking = new Divvit_Tracking;
+		echo '!function(){var t=window.divvit=window.divvit||[];if(t.DV_VERSION="1.0.0",t.init=function(e){if(!t.bInitialized){var i=document.createElement("script");i.setAttribute("type","text/javascript"),i.setAttribute("async",!0),i.setAttribute("src","'.$divvitTracking->get_divvit_url('tag').'/tag.js?id="+e);var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(i,n)}},!t.bInitialized){t.functions=["customer","pageview","cartAdd","cartRemove","cartUpdated","orderPlaced","nlSubscribed","dv"];for(var e=0;e<t.functions.length;e++){var i=t.functions[e];t[i]=function(e){return function(){return Array.prototype.unshift.call(arguments,e),t.push(arguments),t}}(i)}}}();';
 	}
 
 	public function getProductCats($product){
@@ -243,5 +226,79 @@ class Divvit_Tracking_Public
 		}
 
 		return json_encode($cat_array);
+	}
+
+	public function exposed_divvit_order()
+	{
+		$requestUrl = parse_url($_SERVER['REQUEST_URI']);
+		$path = $requestUrl["path"];
+		$resultUrl = trim(str_replace(basename($_SERVER['SCRIPT_NAME']), '', $path), '/');
+		if (!in_array('divvit-order-tracker',explode('/', $resultUrl))) {
+			return true;
+		}
+		if (!get_option('divvit_token')) {
+			http_response_code(401);
+			header("Status: UNAUTHORIZED");
+			exit();
+		}
+		global $wpdb;
+		$post_status = implode("','", array('wc-processing', 'wc-completed') );
+		$orders = $wpdb->get_results( "SELECT * FROM $wpdb->posts 
+		            WHERE post_type = 'shop_order'
+		        ");
+		echo "[";
+		foreach ($orders as $key => $per_order) {
+			$frontend_id = get_option('divvit_tracking_id');
+			$order = new WC_Order($per_order->ID);
+			$products = $order->get_items();
+			$coupons = $order->get_used_coupons();
+			$uid = '';
+			if(isset($_COOKIE['DV_TRACK']))
+				$uid = $_COOKIE['DV_TRACK']
+			?>
+				{
+					"uid": "<?php echo $uid; ?>",
+					"orderId": "<?php echo $order->id; ?>",
+					"createdAt": "<?php echo gmdate('Y-m-d H:i:s', strtotime($order->order_date)) ?>",
+					"total": "<?php echo $order->get_total(); ?>",
+					"totalProductsNet": "<?php echo $order->get_subtotal(); ?>",
+					"currency": "<?php echo $order->get_order_currency(); ?>",
+					"shipping": "<?php echo $order->get_total_shipping(); ?>",
+					"paymentMethod": "<?php echo $order->payment_method; ?>",
+					"customer": {
+						"idFields": {
+							"email": "<?php echo $order->billing_email; ?>"
+						},
+						"name": "<?php echo $order->billing_first_name . ' ' . $order->billing_last_name  ?>"
+					},
+					"products": [
+						<?php
+						foreach($products as $single_product):
+						$product = new WC_Product($single_product['product_id']);
+						$product_cats = $this->getProductCats($product);
+						?>
+						{
+							"id": "<?php echo $product->get_id(); ?>",
+							"name": "<?php echo $product->get_title(); ?>",
+							"category": <?php echo $product_cats; ?>,
+							"price": "<?php echo $product->price ?>",
+							"currency": "<?php echo $order->get_order_currency(); ?>",
+							"quantity": "<?php echo $single_product['qty']; ?>"
+						},
+						<?php endforeach; ?>
+					],
+					vouchers: [
+						<?php foreach($coupons as $single_coupon):  ?>
+						{
+							"voucher": "<?php echo $single_coupon; ?>",
+							"voucherDiscount": "<?php echo $order->cart_discount; ?>"
+						},
+						<?php endforeach; ?>
+					]
+				},
+			<?php
+		}
+		echo "]";
+		exit();
 	}
 }
