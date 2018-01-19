@@ -86,7 +86,7 @@ class Divvit_Tracking {
 	 * - Divvit_Tracking_Loader. Orchestrates the hooks of the plugin.
 	 * - Divvit_Tracking_i18n. Defines internationalization functionality.
 	 * - Divvit_Tracking_Admin. Defines all hooks for the admin area.
-	 * - Divvit_Tracking_Public. Defines all hooks for the public side of the site.
+	 * - `. Defines all hooks for the public side of the site.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -151,6 +151,7 @@ class Divvit_Tracking {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		$this->loader->add_filter( 'woocommerce_get_settings_general',$plugin_admin, 'add_divvit_tracking_settings', 10, 2 );
+		$this->loader->add_action( 'woocommerce_settings_save_general', $plugin_admin, 'divvit_id_updated' );
 	}
 
 	/**
@@ -163,11 +164,11 @@ class Divvit_Tracking {
 	private function define_public_hooks() {
 
 		$plugin_public = new Divvit_Tracking_Public( $this->get_Divvit_Tracking(), $this->get_version() );
-
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 		$this->loader->add_action( 'wp_footer', $plugin_public, 'insert_divvit_tracking_script' );
 		$this->loader->add_action( 'woocommerce_thankyou', $plugin_public, 'insert_divvit_order_tracking_script' );
+		$this->loader->add_action( 'template_redirect', $plugin_public, 'exposed_divvit_order' );
 		// $this->loader->add_action( 'woocommerce_ajax_added_to_cart', $plugin_public, 'divvit_add_cart_item' );
 		// $this->loader->add_action( 'woocommerce_add_to_cart', $plugin_public, 'divvit_add_cart_item' );
 	}
@@ -210,6 +211,29 @@ class Divvit_Tracking {
 	 */
 	public function get_version() {
 		return $this->version;
+	}
+
+	/**
+	 * Get corresponding divvit tag/tracker url
+	 *
+	 * @since    1.0.4
+	 * @access   public
+	 */
+	public function get_divvit_url($type = '')
+	{
+	    if ($type == 'tag') {
+	        if (getenv('DIVVIT_TAG_URL') != '') {
+	            return getenv('DIVVIT_TAG_URL');
+	        } else {
+	            return 'https://tag.divvit.com';
+	        }
+	    } else {
+	        if (getenv('DIVVIT_TRACKING_URL') != '') {
+	            return getenv('DIVVIT_TRACKING_URL');
+	        } else {
+	            return 'https://tracker.divvit.com';
+	        }
+	    }
 	}
 
 }
