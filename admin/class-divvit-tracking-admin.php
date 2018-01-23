@@ -73,6 +73,7 @@ class Divvit_Tracking_Admin {
 	}
 
 	public function add_divvit_tracking_settings( $settings ) {
+
 		$settings_divvit = array();
 		$settings_divvit[] = array(
 			'name' => __( 'Divvit Tracking Settings', 'text-domain' ),
@@ -89,5 +90,34 @@ class Divvit_Tracking_Admin {
 		);
 		$settings_divvit[] = array( 'type' => 'sectionend', 'id' => 'divvittracking' );
 		return array_merge($settings,$settings_divvit);
+	}
+
+	public function divvit_id_updated()
+	{
+		if (get_option('divvit_tracking_id')) {
+			$divvitTracking = new Divvit_Tracking;
+			$url = $divvitTracking->get_divvit_url('tracker')."/auth/register";
+			$args = [
+						'method' => 'POST',
+						'headers'   => array('Content-Type' => 'application/json; charset=utf-8'),
+						'body' => json_encode(['url' => get_site_url().'/divvit-order-tracker', 'frontendId' => get_option('divvit_tracking_id')]),
+						'cookies' => []
+					];
+			$rawResult = wp_remote_post( $url, $args);
+			$result = json_decode($rawResult['body']);
+			if (isset($result->accessToken)) {
+				if (get_option('divvit_token')) {
+					update_option('divvit_token', $result->accessToken);
+				} else {
+					add_option('divvit_token', $result->accessToken);
+				}
+			} else {
+				?>
+					<div class="notice notice-error divvit-notice is-dismissible" >
+					        <p><?php _e('Divvit Authentication Notice! '.$result->message.'. Please try again.'); ?></p>
+					</div>
+				<?php
+			}
+		}
 	}
 }
